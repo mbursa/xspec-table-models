@@ -30,7 +30,7 @@ import astropy.io.fits as fits
 import astropy.table as fits_table
 
 
-class XspecTableModel:
+class XspecTableModelAdditive:
 
     def __init__(self, file_name, model_name, energies, params, redshift=False):
         """
@@ -51,7 +51,6 @@ class XspecTableModel:
         
         # remember some inputs
         self.filename = file_name
-        self.metadata = metadata
         self.energies = energies
         self.params = params
        
@@ -239,65 +238,10 @@ class XspecTableModel:
 
 
 
-# demo function to test the class
-def test():
-    """
-    Make a test table model - a cut-off power-law.
-    Creates an additive table model with power-law energy dependency and an exponential cut-off.
-    The idea is to duplicate the analytical 'cutoffpl' model of Xspec.
-    The too models can be compared to check that the table model class scales everything correctly.
-    """
-    sys.stderr.write("### Demo for XspecTableModel class\n")
-
-    model_name = 'cutoffpl'
-    model_fits_file = 'cutoffpl.fits'
-    en_min = 1e-2
-    en_max = 1e+2
-    en_bins = 500
-
-    # define energy grid and param grids
-    energies = np.logspace(math.log10(en_min), math.log10(en_max), en_bins)
-    param1 = ('alpha', np.linspace(-5.0, 5.0, 51), 0)
-    param2 = ('beta',  np.logspace(math.log10(0.01), math.log10(500.0), 51), True)
-
-    # set up the fits file
-    fits = XspecTableModel(model_fits_file, model_name, energies, [param1, param2])
-
-    # fill the model with spectra
-    for g in fits.generator():
-        index, param_indexes, param_values, energies = g
-        sys.stderr.write("\r")
-        sys.stderr.write("> spectrum for row index %d, params:%s" % (index, str(param_values)))
-        sys.stderr.write(" "*20)
-        param_alpha = param_values[0]
-        param_beta = param_values[1]
-        # Iv is the energy (not photon) spectrum and be given in [erg/s/cm2/keV]
-        # param_alpha is the **photon** index, that is why param_alpha-1 is used here
-        # normalization is such that the model gives 1 photon at 1keV
-        # 6.241507e+08 is erg-to-keV conversion factor (erg/(1e3*electronvolt))
-        norm = 6.241507e+08 * 1.0**(-param_alpha+1) * math.exp(-1.0/param_beta)
-        Iv = 1./norm * np.power(energies, -param_alpha+1) * np.exp(-energies/param_beta)
-        fits.write(index, Iv, False)
-    #end if
-    sys.stderr.write("\n")
-
-    # save the fits file
-    sys.stderr.write("> Saving FITS file %s\n" % (model_fits_file))
-    fits.save();
-    sys.stderr.write("> Done\n")
-#end of def
-
-
-
 # if executed as main file then
 # run the main function and exit with returned error code
 if __name__ == "__main__": 
-    if ((len(sys.argv)>1) and (sys.argv[1] == 'test')): 
-        test()
-    else:
-        print("Provides a class to help to create a table model for XSPEC.")
-        print("(a test run may be issued by executing: " + sys.argv[0] + " test")
-
+    print("Provides a classes to help to create a table model for XSPEC. See the documentation for a usage guide.")
     sys.exit(0)
 #end if
 

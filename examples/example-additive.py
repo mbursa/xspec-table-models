@@ -1,4 +1,4 @@
-# XspecTableModel example #1
+# Example of making an additive table model
 #
 # Makes an additive table model with a power-law energy spectrum having an exponential cut-off.
 # The result should be idential to the analytical 'cutoffpl' model of Xspec, which you may 
@@ -14,7 +14,7 @@ import numpy as np
 
 # add the path to xspec_table_model.py and import the class from the module
 sys.path.append('..')
-from xspec_table_models import XspecTableModel
+from xspec_table_models import XspecTableModelAdditive
 
 
 # Define a function that will serve spectra for given parameters of your model.
@@ -65,7 +65,7 @@ param1 = ('alpha', np.linspace(-5.0, 5.0, 50), False, False)
 param2 = ('beta',  np.geomspace(0.01, 500.0, 50), True, False)
 
 # set up the fits file
-fits = XspecTableModel(model_fits_file, model_name, energies, [param1, param2])
+fits = XspecTableModelAdditive(model_fits_file, model_name, energies, [param1, param2])
 
 # fill the model with spectra
 # the loop body is called once for each combination of model parameters; in our case it will be
@@ -76,9 +76,12 @@ for g in fits.generator():
     #  - param_indexes: a tuple containing indices of the current parameter combination
     #  - param_values: a tuple containing values of the current parameter combination
     #  - energies: the energy grid [keV]
-    # the paremeters are in the same order as they have been given to XspecTableModel(); 
+    # the paremeters are in the same order as they have been given to XspecTableModelAdditive(); 
     # the last parameter changes the fastest
     index, param_indexes, param_values, energies = g
+    sys.stderr.write("\r")
+    sys.stderr.write("> spectrum for row index %d, params:%s" % (index, str(param_values)))
+    sys.stderr.write(" "*20)
 
     # get the spectrum for the given combination of parameters;
     # the returned spectrum units must be [erg/s/cm2/keV]
@@ -87,8 +90,12 @@ for g in fits.generator():
     # write the spectrum to the model table
     fits.write(index, Iv, False)
 #end if
+sys.stderr.write("\n")
 
 # finally, save the fits file
+sys.stderr.write("> Saving FITS file %s\n" % (model_fits_file))
 fits.save();
+
+sys.stderr.write("> Done\n")
 
 
