@@ -1,5 +1,6 @@
 
 
+
 # Xspec Table Model Generator
 
 Python class that helps to create table models for XSPEC.
@@ -52,14 +53,17 @@ Use `XspecTableModelAdditive` class to create an additive table model.
 
 ```
 class XspecTableModelAdditive(file_name, model_name, energies, params, redshift=False)
+
+Creates the class instance and opens the FITS file from the filesystem if it exists already or creates a new one.
+
 ```
-**file_name**
-The path to the FITS file that will be created in the filesystem.
-**model_name**
-The name of the model (letters only, 12 characters max).
-**energies**
-Array of energies to consider for spectra in [keV].
-**params**
+**file_name**  
+The path to the FITS file that will be created in the filesystem.  
+**model_name**  
+The name of the model (letters only, 12 characters max).  
+**energies**  
+Array of energies to consider for spectra in [keV].  
+**params**  
 Array of parameters of the model. Each parameter is a tupe with 4 items:
 * **name** - name of the parameter (letters only, 12 characters max)
 * **grid** - array of parameter values (in increasing order).
@@ -89,6 +93,8 @@ Gives an iterator that loops over all combinations of parameter values and allow
 * **param_indexes** - array of parameter indexes for the current spectral row (not really needed, but provided for completeness; you can use the index to get the parameter value from the parameter value grid)
 * **energies** - array of energies in [keV] (a copy of the energy grid passed to the class constructor)
 
+The iterator skips any rows that have the spectra filled already. In that way, if the FITS file have existed before, only the missing spectra are computed and so the script allows for a recovery from an interrupted run. On the other hand, if you want to start over, you need to remove the existing FITS file before starting the script.
+
 Example:
 ```python
 model = XspecTableModelAdditive(...)
@@ -104,10 +110,12 @@ for g in fits.generator():
 def XspecTableModelAdditive.write(index, spectrum, flush=False)
 ```
 Write a single spectrum to the table. 
-**index**
-Row index of the spectrum (given by the generator).
-**spectrum**
-Energy spectrum (specific flux) in [erg/s/cm2/keV] given at each point of the energy grid.
+**index**  
+Row index of the spectrum (given by the generator).  
+**spectrum**  
+Energy spectrum (specific flux) in [erg/s/cm2/keV] given at each point of the energy grid.  
+**flush**  
+If True, the model table is saved to the file system after the spectrum is written.
 
 **Note**: XSPEC requires the table model to contain spectra in units of photons/cm/s (photon spectrum integrated over the energy bin). The spectrum that is passed to `write()` method, however, must be an energy spectrum (specific flux) given at each energy point (not integrated). The integration and conversion to photon spectrum is done inside the function.
 <br><br>
