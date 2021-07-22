@@ -19,7 +19,7 @@ This python module provides a class that helps to create the FITS file in the ri
 The basic usage involves importing the helper class from the module, creating an instace of `XspecTableModel` and filling the model with spectra. The skeleton looks like this:
 
 ```python
-from xspec_table_model import XspecTableModel
+from xspec_table_models import XspecTableModel
 
 def spectrum(energies, params):
 	return [] # specific fluxes [erg/s/cm2/keV] for the grid of energies
