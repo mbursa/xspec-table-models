@@ -32,16 +32,13 @@ import astropy.table as fits_table
 
 class XspecTableModel:
 
-    def __init__(self, file_name, model_name, energies, params, metadata=[]):
+    def __init__(self, file_name, model_name, energies, params, redshift=False):
         """
         Create the target FITS file containing the tabulated model.
         
         Args:
             file_name: full path to the target file
             model_name: name of the model (should contain only letters and numbers)
-            metadata: array of tuples (name, value) containig any information 
-                      that should be written to parameters table header 
-                      (name must not be longer that 8 characters)
             energies: grid of energies [keV]
             params: array of tuples (name, grid, logarithmic, [frozen]), where
                     `name` is the name of the parameter (max 11 characters),
@@ -49,14 +46,15 @@ class XspecTableModel:
                     the parameter, `logarithmic` is to tell Xspec whether to treat
                     the parameter linearly (0/False) or logarithmicly (1/True), 
                     and `frozen` tells if the parameter is frozen by default (optional, defaults to False)
+            redshift: if the redshift parameter shall be added by Xspec
         """
         
-        # remember inputs
+        # remember some inputs
         self.filename = file_name
         self.metadata = metadata
         self.energies = energies
         self.params = params
-        
+       
         # Xspec uses bin-integrated spectra, so the number of table bins is one less 
         # than the number of energy points
         en_bins = len(energies)-1
@@ -74,7 +72,7 @@ class XspecTableModel:
         prihdr = fits.Header()
         prihdr['MODLNAME'] = model_name
         prihdr['MODLUNIT'] = "photons/cm2/s"
-        prihdr['REDSHIFT'] = False
+        prihdr['REDSHIFT'] = bool(redshift)
         prihdr['ADDMODEL'] = True
         prihdr['HDUCLASS'] = "OGIP"
         prihdr['HDUCLAS1'] = "XSPEC TABLE MODEL"
@@ -90,8 +88,6 @@ class XspecTableModel:
         params_hdr['HDUCLAS1'] = "XSPEC TABLE MODEL"
         params_hdr['HDUCLAS2'] = "PARAMETERS"
         params_hdr['HDUVERS1'] = "1.0.0"
-        # add metadata to header
-        for (key, value) in metadata: params_hdr[key] = value
         # determine the maximul length of param grid
         max_param_len = 0
         for (param_name, param_grid, param_log, param_frozen) in params: max_param_len = max(max_param_len, len(param_grid))
