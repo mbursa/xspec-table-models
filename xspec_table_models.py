@@ -40,12 +40,12 @@ class XspecTableModelAdditive:
             file_name: full path to the target file
             model_name: name of the model (should contain only letters and numbers)
             energies: grid of energies [keV]
-            params: array of tuples (name, grid, logarithmic, [frozen]), where
+            params: array of tuples (name, grid, logarithmic, frozen), where
                     `name` is the name of the parameter (max 11 characters),
-                    `grid` is an array of floats containing discrete values for 
+s                    `grid` is an array of floats containing discrete values for 
                     the parameter, `logarithmic` is to tell Xspec whether to treat
                     the parameter linearly (0/False) or logarithmicly (1/True), 
-                    and `frozen` tells if the parameter is frozen by default (optional, defaults to False)
+                    and `frozen` tells if the parameter is frozen by default
             redshift: if the redshift parameter shall be added by Xspec
         """
         
@@ -189,7 +189,7 @@ class XspecTableModelAdditive:
 
             # return total index, array of grid indexes, and array of grid values
             #sys.stderr.write("> generator: passing spectrum index %d (%s %s)\n" % (global_index, str(param_indexes), str(param_values)))
-            yield (global_index, param_indexes, param_values, self.energies)
+            yield (global_index, param_values, param_indexes, self.energies)
             global_index += 1
         #end while
     #end def

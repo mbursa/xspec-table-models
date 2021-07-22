@@ -73,12 +73,12 @@ fits = XspecTableModelAdditive(model_fits_file, model_name, energies, [param1, p
 for g in fits.generator():
     # g tuple contains 4 items:
     #  - index: the row index of the spectral table (starts at 0)
-    #  - param_indexes: a tuple containing indices of the current parameter combination
     #  - param_values: a tuple containing values of the current parameter combination
+    #  - param_indexes: a tuple containing indices of the current parameter combination
     #  - energies: the energy grid [keV]
     # the paremeters are in the same order as they have been given to XspecTableModelAdditive(); 
     # the last parameter changes the fastest
-    index, param_indexes, param_values, energies = g
+    index, param_values, param_indexes, energies = g
     sys.stderr.write("\r")
     sys.stderr.write("> spectrum for row index %d, params:%s" % (index, str(param_values)))
     sys.stderr.write(" "*20)
