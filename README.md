@@ -11,8 +11,8 @@ This python module provides a class that helps to create the FITS file in the ri
 
 ## Limitations
 
-* the class does not support so called "additional parameters" at the moment
-* only additive models can be created
+* `XspecTableModelAdditive` class does not support so called "additional parameters" at the moment
+* only additive models can be created at the moment
 
 ## Usage
 
@@ -25,7 +25,7 @@ def spectrum(energies, params):
 	return [] # specific fluxes [erg/s/cm2/keV] for the grid of energies
 #end def
 
-fits = XspecTableModel('mymodel.fits', 'mymodel', energies, [param1, param2, ...])
+fits = XspecTableModelAdditive('mymodel.fits', 'mymodel', energies, [param1, param2, ...])
 
 for g in fits.generator():
     index, param_indexes, param_values, energies = g
@@ -36,7 +36,7 @@ for g in fits.generator():
 fits.save();
 ```
 
-Then within XSPEC environment, you simply load your table model with
+Then within the XSPEC environment, you simply load your table model with
 ```
 XSPEC> model atable{mymodel.fits}
 ```
