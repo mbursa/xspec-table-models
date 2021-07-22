@@ -1,7 +1,7 @@
-# Creates a table model for XSPEC
+# A helper class to make XSPEC table models
 #
 # It creates/opens a FITS file that contains an Xspec table model, 
-# i.e. a set of tabulated spectra that Xspec knows how to work with,
+# (a set of tabulated spectra that Xspec knows how to work with)
 # and fills it with given spectra. 
 #
 # The table model FITS file is constructed according to the following spec:
@@ -9,6 +9,8 @@
 #
 # If the FITS file has existed before, only missing spectra are computed. 
 # In that way the script allows recovery from an interrupted run.
+#
+# See a provided description and examples that demonstrate the usage of the class.
 #
 # Dependency: astropy (https://www.astropy.org/)
 # 
@@ -41,11 +43,12 @@ class XspecTableModel:
                       that should be written to parameters table header 
                       (name must not be longer that 8 characters)
             energies: grid of energies [keV]
-            params: array of tuples (name, grid, logarithmic), where
-                    name is the name of the parameter (max 11 characters),
-                    grid is an array of floats containing discrete values for 
-                    the parameter, and logarithmic is to tell Xspec whether to treat
-                    the parameter linearly (0/False) or logarithmicly (1/True)
+            params: array of tuples (name, grid, logarithmic, [frozen]), where
+                    `name` is the name of the parameter (max 11 characters),
+                    `grid` is an array of floats containing discrete values for 
+                    the parameter, `logarithmic` is to tell Xspec whether to treat
+                    the parameter linearly (0/False) or logarithmicly (1/True), 
+                    and `frozen` tells if the parameter is frozen by default (optional, defaults to False)
         """
         
         # remember inputs
@@ -64,7 +67,7 @@ class XspecTableModel:
         # dimension of the parameter space (parameters x values)
         # (this gives the number of rows of the fits table)
         self.paramspace = 1
-        for (param_name, param_grid, param_log) in params: self.paramspace *= len(param_grid)
+        for (param_name, param_grid, param_log, param_frozen) in params: self.paramspace *= len(param_grid)
         
 
         # create the primary HDU
@@ -91,7 +94,7 @@ class XspecTableModel:
         for (key, value) in metadata: params_hdr[key] = value
         # determine the maximul length of param grid
         max_param_len = 0
-        for (param_name, param_grid, param_log) in params: max_param_len = max(max_param_len, len(param_grid))
+        for (param_name, param_grid, param_log, param_frozen) in params: max_param_len = max(max_param_len, len(param_grid))
         # define table structure
         self.params_hdu = fits.BinTableHDU.from_columns([
             fits.Column(name='NAME', format='12A'),
@@ -108,12 +111,13 @@ class XspecTableModel:
         self.params_hdu.name = 'PARAMETERS'
         # add rows with parameters
         param_index = 0
-        for (param_name, param_grid, param_log) in params: 
+        for (param_name, param_grid, param_log, param_frozen) in params: 
             param_init  = 0.5*(min(param_grid)+max(param_grid))
             param_delta = (max(param_grid)-min(param_grid))/(5.*len(param_grid))
             self.params_hdu.data[param_index] = (
                 param_name, 1 if param_log else 0, 
-                param_init, param_delta,
+                param_init, 
+                param_delta if (not param_frozen) else -1,
                 min(param_grid), min(param_grid), 
                 max(param_grid), max(param_grid), 
                 len(param_grid), 
@@ -175,7 +179,7 @@ class XspecTableModel:
             param_values  = np.zeros(n_params)
             N0 = self.paramspace
             for i in range(n_params):
-                (p_name, p_grid, p_log) = self.params[i]
+                (p_name, p_grid, p_log, p_frozen) = self.params[i]
                 N = len(p_grid)
                 N0 /= N
                 p_index = int(global_index//N0 % N)
