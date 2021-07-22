@@ -14,7 +14,7 @@ import numpy as np
 
 # add the path to xspec_table_model.py and import the class from the module
 sys.path.append('..')
-from xspec_table_model import XspecTableModel
+from xspec_table_models import XspecTableModel
 
 
 # Define a function that will serve spectra for given parameters of your model.
