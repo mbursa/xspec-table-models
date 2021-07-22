@@ -82,7 +82,7 @@ param1 = ('alpha', np.linspace(-5,+5,20), False, False)
 param1 = ('beta', np.geomspace(1e-1,1e+1, 50), True, False)
 model = XspecTableModelAdditive('mymodel.fits', 'mymodel', energies, [param1,param2], False)
 ```
-<br><br>
+<br>
 
 ```
 def XspecTableModelAdditive.generator()
@@ -104,7 +104,7 @@ for g in fits.generator():
     model.write(index, Iv, False)
 #end if
 ```
-<br><br>
+<br>
 
 ```
 def XspecTableModelAdditive.write(index, spectrum, flush=False)
@@ -118,7 +118,7 @@ Energy spectrum (specific flux) in [erg/s/cm2/keV] given at each point of the en
 If True, the model table is saved to the file system after the spectrum is written.
 
 **Note**: XSPEC requires the table model to contain spectra in units of photons/cm/s (photon spectrum integrated over the energy bin). The spectrum that is passed to `write()` method, however, must be an energy spectrum (specific flux) given at each energy point (not integrated). The integration and conversion to photon spectrum is done inside the function.
-<br><br>
+<br>
 
 ```
 def XspecTableModelAdditive.save()
