@@ -61,10 +61,10 @@ Use `XspecTableModelAdditive` class to create an additive table model.
 
 ```
 class XspecTableModelAdditive(file_name, model_name, energies, params, redshift=False)
+```
 
 Creates the class instance and opens the FITS file from the filesystem if it exists already or creates a new one.
 
-```
 **file_name**  
 The path to the FITS file that will be created in the filesystem.  
 **model_name**  
