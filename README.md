@@ -27,15 +27,19 @@ The basic usage involves importing the helper class from the module, creating an
 ```python
 from xspec_table_models import XspecTableModelAdditive
 
-def spectrum(energies, params):
+def spectrum(energies, param):
 	return [] # specific fluxes [erg/s/cm2/keV] for the grid of energies
 #end def
 
-fits = XspecTableModelAdditive('mymodel.fits', 'mymodel', energies, [param1, param2, ...])
+energies = [...]
+param1 = ('param1', [...], False, False)
+
+fits = XspecTableModelAdditive('mymodel.fits', 'mymodel', energies, [param1, ...])
 
 for g in fits.generator():
     index, param_values, param_indexes, energies = g
-    Iv = spectrum(energies, param_values)
+    param = param_values[0]
+    Iv = spectrum(energies, param)
     fits.write(index, Iv, False)
 #end if
 
