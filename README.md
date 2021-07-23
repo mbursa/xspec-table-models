@@ -18,7 +18,7 @@ This python module provides a class that helps to create the FITS file in the ri
 
 ## Dependencies
 
-The module uses [https://www.astropy.org/](AstroPy) for writing the FITS files.
+The module uses [AstroPy](https://www.astropy.org/) for writing the FITS files.
 
 ## Usage
 
