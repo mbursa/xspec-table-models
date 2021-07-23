@@ -16,6 +16,10 @@ This python module provides a class that helps to create the FITS file in the ri
 * `XspecTableModelAdditive` class does not support so called "additional parameters" at the moment
 * only additive models can be created at the moment
 
+## Dependencies
+
+The module uses [https://www.astropy.org/](AstroPy) for writing the FITS files.
+
 ## Usage
 
 The basic usage involves importing the helper class from the module, creating an instace of `XspecTableModel` and filling the model with spectra. The skeleton looks like this:
