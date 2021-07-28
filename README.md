@@ -7,7 +7,7 @@ Create XSPEC table models with the help of this Python class.
 
 ## Purpose
 
-Should you want to create your own spectral model for [https://heasarc.gsfc.nasa.gov/xanadu/xspec/](XSPEC) (an X-ray Spectral Fitting Package), the easiest way is to make a FITS table in [OGIP](https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_009_summary.html) standard as it is described in the XSPEC manual "Appendix C: Adding Models to XSPEC".  The basic concept of a table model is that the file contains an N-dimensional grid of model spectra with each point on the grid having a spectrum for a particular combination of values of the N parameters in the model.
+Should you want to create your own spectral model for [XSPEC](https://heasarc.gsfc.nasa.gov/xanadu/xspec/) (an X-ray Spectral Fitting Package), the easiest way is to make a FITS table in [OGIP](https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_009_summary.html) standard as it is described in the XSPEC manual "Appendix C: Adding Models to XSPEC".  The basic concept of a table model is that the file contains an N-dimensional grid of model spectra with each point on the grid having a spectrum for a particular combination of values of the N parameters in the model.
 
 This python module provides a class that helps to create the FITS file in the right format, so you only need to focus on getting your model spectra.
 
