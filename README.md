@@ -3,7 +3,7 @@
 
 # Xspec Table Model Generator
 
-Python class that helps to create table models for XSPEC.
+Create XSPEC table models with the help of this Python class.
 
 ## Purpose
 
