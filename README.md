@@ -94,10 +94,10 @@ Array of parameters of the model. Each parameter is a tupe with 4 items:
 * **logarithmic** - True/False flag saying if Xspec shall interpolate in the parameter values linearly (False) or logarithmicaly (True)
 * **frozen** - True/False flag saying if Xspec shall initially set this parameter as frozen 
 Example: `par1 = ('mass', [10,20,30,40,50], False, False)`
-**redshift**
+* **redshift**
 If `redshift` parameter shall be added  by Xspec to the model (boolean). The `redshift` parameter will shift the model in energy space and divide by (1+z) factor.
 
-  Do not include a normalization parameter, it will be added by Xspec automaticaly.
+Do not include a normalization parameter, it will be added by Xspec automaticaly.
 
 Example:
 ```python
@@ -133,7 +133,7 @@ for g in fits.generator():
 ```
 def XspecTableModelAdditive.write(index, Iv, flush=False)
 ```
-Write a single spectrum to the table. 
+Write a single spectrum to the table.  
 **index**  
 Row index of the spectrum (given by the generator).  
 **Iv**  
@@ -156,7 +156,7 @@ Save the content of the FITS to the filesystem.
 ```
 def XspecTableModelAdditiveWithPolarization.write(index, Iv, Qv, Uv, flush=False)
 ```
-Write a single spectrum to the table. 
+Write a single spectrum to the table.  
 **index**  
 Row index of the spectrum (given by the generator).  
 **Iv**  
@@ -176,3 +176,7 @@ If True, the model table is saved to the file system after the spectrum is writt
 
 * 2021/07/22 - intial release
 * 2023/07/26 - added support for spectro-polarimetric data (linear polarization)
+
+## Licence
+
+MIT licence
