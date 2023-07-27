@@ -3,7 +3,7 @@
 # Makes an additive table model with a power-law energy spectrum having an exponential cut-off and 
 # 100% linear polarization. The result should be idential to the analytical 'cutoffpl' model of Xspec, 
 # which you may verify yourself loading this table model to XSPEC:
-# XSPEC> model atable{cutoffpl}
+# XSPEC> model atable{cutoffplpol}
 #
 # This example uses an analytical function for spectra, but in a similar way you can build a model 
 # using external data that you read from text or binary files (e.g. a result of a simulation).
@@ -98,7 +98,8 @@ for g in fits.generator():
     sys.stderr.write(" "*20)
 
     # get the I, Q, U spectrum for the given combination of parameters;
-    # the returned spectrum units must be [erg/s/cm2/keV]
+    # the returned spectrum units must be [erg/s/cm2/keV] and has to have the same number of elements
+    # as does the `energies` array have
     Iv, Qv, Uv = spectrum(energies, param_values)
     
     # write the spectrum to the model table
