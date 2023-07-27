@@ -27,19 +27,29 @@ The basic usage involves importing the helper class from the module, creating an
 ```python
 from xspec_table_models import XspecTableModelAdditive
 
-def spectrum(energies, param):
+def spectrum(energies, param1, param2):
+  ''' This function provides the spectrum for the given set of parameters. '''
 	return [] # specific fluxes [erg/s/cm2/keV] for the grid of energies
 #end def
 
+# array of energies [keV]
 energies = [...]
+# define parameters:
+# each parameter is a tuple of: parameter name, array of values, 
+#    False/True for linear/logarithimic interpolation, False/True for free/frozen parameter
 param1 = ('param1', [...], False, False)
+param2 = ...
 
-fits = XspecTableModelAdditive('mymodel.fits', 'mymodel', energies, [param1, ...])
+fits = XspecTableModelAdditive('mymodel.fits', 'mymodel', energies, [param1, param2, ...])
 
 for g in fits.generator():
+    # recover parameters for the current grid point
     index, param_values, param_indexes, energies = g
-    param = param_values[0]
-    Iv = spectrum(energies, param)
+    param1 = param_values[0]
+    param2 = param_values[1]
+    # get the spectrum
+    Iv = spectrum(energies, param1, param2)
+    # write to FITS file
     fits.write(index, Iv, False)
 #end if
 
@@ -50,6 +60,12 @@ Then within the XSPEC environment, you simply load your table model with
 ```
 XSPEC> model atable{mymodel.fits}
 ```
+
+#### Polarization
+
+In case you work with spectro-polarimetric data (eg. X-ray polarization), you can use `XspecTableModelAdditiveWithLinearPolarization` class that is a descendant of `XspecTableModelAdditive` and produces FITS file with three spectra (for `I`,`Q`,`U` Stokes parameters) for each parameter grid point. Only linear polarization is assumed, so only spectra for `I`,`Q`,`U` are given and `V` is ignored.
+
+## Examples
 
 You can refer to the [examples](tree/main/examples) folder for complete and commented examples.
 
@@ -115,12 +131,12 @@ for g in fits.generator():
 <br>
 
 ```
-def XspecTableModelAdditive.write(index, spectrum, flush=False)
+def XspecTableModelAdditive.write(index, Iv, flush=False)
 ```
 Write a single spectrum to the table. 
 **index**  
 Row index of the spectrum (given by the generator).  
-**spectrum**  
+**Iv**  
 Energy spectrum (specific flux) in [erg/s/cm2/keV] given at each point of the energy grid.  
 **flush**  
 If True, the model table is saved to the file system after the spectrum is written.
@@ -135,3 +151,28 @@ Save the content of the FITS to the filesystem.
 
 
 
+### XspecTableModelAdditiveWithLinearPolarization class
+
+```
+def XspecTableModelAdditiveWithPolarization.write(index, Iv, Qv, Uv, flush=False)
+```
+Write a single spectrum to the table. 
+**index**  
+Row index of the spectrum (given by the generator).  
+**Iv**  
+Energy spectrum (specific flux) in [erg/s/cm2/keV] given at each point of the energy grid.  
+**Qv**  
+Energy spectrum (specific flux) in [erg/s/cm2/keV] of the Q Stokes parameter given at each point of the energy grid.  
+**Uv**  
+Energy spectrum (specific flux) in [erg/s/cm2/keV] of the U Stokes parameter given at each point of the energy grid.  
+**flush**  
+If True, the model table is saved to the file system after the spectrum is written.
+
+**Note**: XSPEC requires the table model to contain spectra in units of photons/cm/s (photon spectrum integrated over the energy bin). The spectrum that is passed to `write()` method, however, must be an energy spectrum (specific flux) given at each energy point (not integrated). The integration and conversion to photon spectrum is done inside the function.
+<br>
+
+
+## History
+
+* 2021/07/22 - intial release
+* 2023/07/26 - added support for spectro-polarimetric data (linear polarization)

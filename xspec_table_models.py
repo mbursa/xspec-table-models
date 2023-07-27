@@ -30,7 +30,17 @@ import astropy.io.fits as fits
 import astropy.table as fits_table
 
 
+
+# constants
+kev2erg = 1.602177e-09  # keV-erg ((1e3*electronvolt)/erg)
+erg2kev = 6.241507e+08  # erg->keV (erg/(1e3*electronvolt))
+
+
 class XspecTableModelAdditive:
+
+    # define the number of model spectra for each parameter grid
+    # (in most situations there is exactly one spectrum per grid point)
+    NXFLTEXP = 1
 
     def __init__(self, file_name, model_name, energies, params, redshift=False):
         """
@@ -50,9 +60,11 @@ s                    `grid` is an array of floats containing discrete values for
         """
         
         # remember some inputs
-        self.filename = file_name
-        self.energies = energies
-        self.params = params
+        self.model_name = model_name
+        self.redshift   = redshift
+        self.filename   = file_name
+        self.energies   = energies
+        self.params     = params
        
         # Xspec uses bin-integrated spectra, so the number of table bins is one less 
         # than the number of energy points
@@ -69,13 +81,7 @@ s                    `grid` is an array of floats containing discrete values for
 
         # create the primary HDU
         prihdr = fits.Header()
-        prihdr['MODLNAME'] = model_name
-        prihdr['MODLUNIT'] = "photons/cm2/s"
-        prihdr['REDSHIFT'] = bool(redshift)
-        prihdr['ADDMODEL'] = True
-        prihdr['HDUCLASS'] = "OGIP"
-        prihdr['HDUCLAS1'] = "XSPEC TABLE MODEL"
-        prihdr['HDUVERS1'] = "1.0.0"
+        self.define_hdu_primary(prihdr)
         self.primary_hdu = fits.PrimaryHDU(header=prihdr)
 
 
@@ -147,9 +153,20 @@ s                    `grid` is an array of floats containing discrete values for
         self.spectra_hdu = fits.BinTableHDU.from_columns([
             fits.Column(name='PARAMVAL', format=str(n_params)+'E'),
             fits.Column(name='INTPSPEC', format=str(en_bins)+'E'),
-        ], spectra_hdr, nrows=self.paramspace)
+        ], spectra_hdr, nrows=self.NXFLTEXP*self.paramspace)
         self.spectra_hdu.name = 'SPECTRA'
     #end of def
+
+
+    def define_hdu_primary(self, hdr):
+        hdr['HDUCLASS'] = "OGIP"
+        hdr['HDUCLAS1'] = "XSPEC TABLE MODEL"
+        hdr['HDUVERS1'] = "1.0.0"
+        hdr['MODLNAME'] = self.model_name
+        hdr['MODLUNIT'] = "photons/cm2/s"
+        hdr['REDSHIFT'] = bool(self.redshift)
+        hdr['ADDMODEL'] = True
+    #end def
 
 
     def generator(self):
@@ -162,12 +179,12 @@ s                    `grid` is an array of floats containing discrete values for
         """
         global_index = 0
         n_params = len(self.params)
-        while (global_index < self.paramspace):
+        while (global_index < self.NXFLTEXP*self.paramspace):
             # skip row that have data already
             while (np.sum(self.spectra_hdu.data[global_index][1]) > 0.0): 
-                global_index += 1
-                if (global_index >= self.paramspace): break
-            if (global_index >= self.paramspace): break
+                global_index += self.NXFLTEXP
+                if (global_index >= self.NXFLTEXP*self.paramspace): break
+            if (global_index >= self.NXFLTEXP*self.paramspace): break
 
             # get indexes in each grid; the last grid changing the fastest
             param_indexes = np.zeros(n_params, dtype=int)
@@ -177,46 +194,47 @@ s                    `grid` is an array of floats containing discrete values for
                 (p_name, p_grid, p_log, p_frozen) = self.params[i]
                 N = len(p_grid)
                 N0 /= N
-                p_index = int(global_index//N0 % N)
+                p_index = int((global_index/3)//N0 % N)
                 #print('global_index',global_index)
                 #print('p_index',p_index)
                 #print('p_grid[p_index]',p_grid[p_index])
                 #print('p_grid',p_grid)
                 param_indexes[i] = p_index
                 param_values[i]  = p_grid[p_index]
-    
-            self.spectra_hdu.data[global_index][0] = param_values
+
+            # write parameter values (repeat the same parameters for each spectrum of the set)    
+            for i in range(self.NXFLTEXP):
+                self.spectra_hdu.data[global_index+i][0] = param_values
+            #end for
 
             # return total index, array of grid indexes, and array of grid values
             #sys.stderr.write("> generator: passing spectrum index %d (%s %s)\n" % (global_index, str(param_indexes), str(param_values)))
             yield (global_index, param_values, param_indexes, self.energies)
-            global_index += 1
+            global_index += self.NXFLTEXP
         #end while
     #end def
 
 
-    def write(self, index, spectrum, flush=False):
+    def write(self, index, Iv, flush=False):
         """
         Write a spectrum at a row position of `index`.
         
-        Spectrum is supposed to be in units [erg/s/cm2/keV].
+        Iv is a spectrum (specific flux) in units [erg/s/cm2/keV].
         If `flush` is set, the FITS file content will be saved to disk.
         """
-        if (len(self.energies) != len(spectrum)):
-            sys.stderr.write("ERROR: invalid spectrum dimension (%d, expected %d)\n" % (len(spectrum), len(self.energies)))
+        if (len(self.energies) != len(Iv)):
+            sys.stderr.write("ERROR: invalid spectrum dimension (%d, expected %d)\n" % (len(Iv), len(self.energies)))
             return
 
         # convert spectrum from [erg/s/cm2/keV] to [photons/s/cm2]
-        kev2erg = 1.602177e-09  # keV-erg ((1e3*electronvolt)/erg)
-        erg2kev = 6.241507e+08  # erg->keV (erg/(1e3*electronvolt))
-        integrated_spectrum = np.zeros(self.energies.size-1)
-        for i in range(len(integrated_spectrum)): 
+        Iv_integrated = np.zeros(self.energies.size-1)
+        for i in range(len(Iv_integrated)): 
             e1 = self.energies[i]*kev2erg
             e2 = self.energies[i+1]*kev2erg
-            integrated_spectrum[i] = 0.5*(spectrum[i]/e1+spectrum[i+1]/e2) * (e2-e1)*erg2kev
+            Iv_integrated[i] = 0.5*(Iv[i]/e1+Iv[i+1]/e2) * (e2-e1)*erg2kev
         #end for
 
-        self.spectra_hdu.data[index][1] = integrated_spectrum
+        self.spectra_hdu.data[index][1] = Iv_integrated
         
         if flush: self.save()
     #end of def
@@ -230,6 +248,57 @@ s                    `grid` is an array of floats containing discrete values for
         fits.HDUList([self.primary_hdu, self.energs_hdu, self.params_hdu, self.spectra_hdu]).writeto(self.filename)
     #end of def
 
+
+#end of class (XspecTableModelAdditive)
+
+
+
+class XspecTableModelAdditiveWithLinearPolarization(XspecTableModelAdditive):
+
+    # define the number of model spectra for each parameter grid
+    # for polarimetry we have 3 spectra for each grid point that are fitted simoultaneously (I, Q, U)
+    NXFLTEXP = 3
+
+    def define_hdu_primary(self, hdr):
+        XspecTableModelAdditive.define_hdu_primary(self,hdr)
+
+        # add polarization-specific headers
+        hdr['NXFLTEXP'] = self.NXFLTEXP
+        hdr['XFXP0001'] = 'Stokes:0'
+        hdr['XFXP0002'] = 'Stokes:1'
+        hdr['XFXP0003'] = 'Stokes:2'
+    #end def
+
+
+    def write(self, index, Iv, Qv, Uv, flush=False):
+        """
+        Write a spectrum at a row position of `index`.
+        
+        Spectrum is supposed to be in units [erg/s/cm2/keV].
+        If `flush` is set, the FITS file content will be saved to disk.
+        """
+        if (len(self.energies) != len(Iv)) or (len(self.energies) != len(Qv)) or (len(self.energies) != len(Uv)):
+            sys.stderr.write("ERROR: invalid spectrum dimension (%d, expected %d)\n" % (len(Iv), len(Qv), len(Uv), len(self.energies)))
+            return
+
+        # convert spectrum from [erg/s/cm2/keV] to [photons/s/cm2]
+        Iv_integrated = np.zeros(self.energies.size-1)
+        Qv_integrated = np.zeros(self.energies.size-1)
+        Uv_integrated = np.zeros(self.energies.size-1)
+        for i in range(len(Iv_integrated)): 
+            e1 = self.energies[i]*kev2erg
+            e2 = self.energies[i+1]*kev2erg
+            Iv_integrated[i] = 0.5*(Iv[i]/e1+Iv[i+1]/e2) * (e2-e1)*erg2kev
+            Qv_integrated[i] = 0.5*(Qv[i]/e1+Qv[i+1]/e2) * (e2-e1)*erg2kev
+            Uv_integrated[i] = 0.5*(Uv[i]/e1+Uv[i+1]/e2) * (e2-e1)*erg2kev
+        #end for
+
+        self.spectra_hdu.data[index+0][1] = Iv_integrated
+        self.spectra_hdu.data[index+1][1] = Qv_integrated
+        self.spectra_hdu.data[index+2][1] = Uv_integrated
+        
+        if flush: self.save()
+    #end of def
 
 
 #end of class
