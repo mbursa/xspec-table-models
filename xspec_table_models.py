@@ -194,7 +194,7 @@ s                    `grid` is an array of floats containing discrete values for
                 (p_name, p_grid, p_log, p_frozen) = self.params[i]
                 N = len(p_grid)
                 N0 /= N
-                p_index = int((global_index/3)//N0 % N)
+                p_index = int((global_index/self.NXFLTEXP)//N0 % N)
                 #print('global_index',global_index)
                 #print('p_index',p_index)
                 #print('p_grid[p_index]',p_grid[p_index])
